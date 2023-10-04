@@ -2,9 +2,6 @@ name: 'Ajv validate JSON(s)'
 description: 'Validate JSON(s) by given schema using Ajv schema validator'
 author: 'vanekj'
 inputs:
-  schema:
-    description: 'Relative path to the JSON schema file (eg. schemas/default.schema.json)'
-    required: true
   pattern:
     description: 'Glob pattern to the JSON(s) to validate (eg. data/**/*.json)'
     required: true
