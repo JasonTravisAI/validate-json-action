@@ -23,10 +23,10 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: yarn ci
+        run: yarn
 
       - name: Build application
-        run: yarn run build
+        run: yarn build
 
       - name: Update resources
         uses: test-room-7/action-update-file@v1
