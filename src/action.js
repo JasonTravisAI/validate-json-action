@@ -2,7 +2,7 @@
 import fs from 'node:fs/promises';
 
 // Load additional modules
-import Ajv from 'ajv';
+import Ajv2020 from 'ajv/dist/2020';
 import core from '@actions/core';
 import glob from '@actions/glob';
 import styles from 'ansi-styles';
@@ -33,8 +33,7 @@ for await (const schemaPath of globber.globGenerator()) {
 	const schemaObject = JSON.parse(schemaString);
 
 	// Init Ajv schema validator
-	const validator = new Ajv({
-		$data: true, // Enable $data support for draft-07
+	const validator = new Ajv2020({
     	allErrors: true // Collect all validation errors
 	});
 	const validateSchema = validator.compile(schemaObject);
