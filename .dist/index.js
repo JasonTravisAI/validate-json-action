@@ -13071,7 +13071,7 @@ for await (const schemaPath of globber.globGenerator()) {
 	try {
 		validateSchema = validator.compile(schemaObject);
 	} catch (error) {
-		console.log(`Schema is invalid. Failed with error: ${error}`)
+		console.log(`Schema validation failed for file ${schemaPath}, with error: ${error}`)
 	}
 
 	// Define relative JSON file path
