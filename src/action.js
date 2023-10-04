@@ -36,15 +36,11 @@ for await (const schemaPath of globber.globGenerator()) {
 	const validator = new Ajv2020({
     	allErrors: true // Collect all validation errors
 	});
-	const validateSchema = validator.compile(schemaObject);
 
-	const schemaVersion = schemaObject["$schema"];
-
-	// Validate the file according to given schema
-	let validationResult
+	let validateSchema
 
 	try {
-		validationResult = validateSchema({ "$ref": schemaVersion });
+		validateSchema = validator.compile(schemaObject);
 	} catch (error) {
 		console.log(`Schema is invalid. Failed with error: ${error}`)
 	}
@@ -53,18 +49,11 @@ for await (const schemaPath of globber.globGenerator()) {
 	const schemaPathRelative = schemaPath.replace(repositoryPath, '');
 
 	// Print the validation results
-	if (validationResult) {
+	if (validateSchema) {
 		core.info(`${styles.green.open}✔ file ${schemaPathRelative} is valid${styles.green.close}`);
 	} else {
 		core.info(`${styles.red.open}✖︎ file ${schemaPathRelative} is invalid${styles.red.close}`);
 		errorsCounter++;
-	}
-
-	// Print details from the validator
-	if (validateSchema.errors) {
-		core.startGroup('Validation details');
-		core.info(JSON.stringify(validateSchema.errors, null, 2));
-		core.endGroup();
 	}
 }
 

@@ -13065,15 +13065,11 @@ for await (const schemaPath of globber.globGenerator()) {
 	const validator = new ajv_dist_2020_js__WEBPACK_IMPORTED_MODULE_1__({
     	allErrors: true // Collect all validation errors
 	});
-	const validateSchema = validator.compile(schemaObject);
 
-	const schemaVersion = schemaObject["$schema"];
-
-	// Validate the file according to given schema
-	let validationResult
+	let validateSchema
 
 	try {
-		validationResult = validateSchema({ "$ref": schemaVersion });
+		validateSchema = validator.compile(schemaObject);
 	} catch (error) {
 		console.log(`Schema is invalid. Failed with error: ${error}`)
 	}
@@ -13082,18 +13078,11 @@ for await (const schemaPath of globber.globGenerator()) {
 	const schemaPathRelative = schemaPath.replace(repositoryPath, '');
 
 	// Print the validation results
-	if (validationResult) {
+	if (validateSchema) {
 		_actions_core__WEBPACK_IMPORTED_MODULE_2__.info(`${ansi_styles__WEBPACK_IMPORTED_MODULE_4__/* ["default"].green.open */ .Z.green.open}✔ file ${schemaPathRelative} is valid${ansi_styles__WEBPACK_IMPORTED_MODULE_4__/* ["default"].green.close */ .Z.green.close}`);
 	} else {
 		_actions_core__WEBPACK_IMPORTED_MODULE_2__.info(`${ansi_styles__WEBPACK_IMPORTED_MODULE_4__/* ["default"].red.open */ .Z.red.open}✖︎ file ${schemaPathRelative} is invalid${ansi_styles__WEBPACK_IMPORTED_MODULE_4__/* ["default"].red.close */ .Z.red.close}`);
 		errorsCounter++;
-	}
-
-	// Print details from the validator
-	if (validateSchema.errors) {
-		_actions_core__WEBPACK_IMPORTED_MODULE_2__.startGroup('Validation details');
-		_actions_core__WEBPACK_IMPORTED_MODULE_2__.info(JSON.stringify(validateSchema.errors, null, 2));
-		_actions_core__WEBPACK_IMPORTED_MODULE_2__.endGroup();
 	}
 }
 
