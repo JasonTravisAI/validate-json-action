@@ -19,15 +19,16 @@
 	"main": "src/action.js",
 	"scripts": {
 		"format": "prettier --write .",
-		"lint": "eslint \"**/*.js\"",
-		"build": "ncc build src/action.js -o .dist",
-		"start": "node src/action.js"
+		"lint": "eslint \"**/*.ts\"",
+		"build": "ncc build src/action.ts -o .dist",
+		"start": "node src/action.ts"
 	},
 	"dependencies": {
 		"@actions/core": "^1.9.1",
 		"@actions/glob": "^0.2.0",
 		"ajv": "^8.12.0",
-		"ansi-styles": "^6.1.0"
+		"ansi-styles": "^6.1.0",
+		"typescript": "^5.2.2"
 	},
 	"devDependencies": {
 		"@vercel/ncc": "^0.38.0",
