@@ -1,5 +1,5 @@
 // Load node modules
-import fs from 'fs/promises';
+import { readFile } from 'fs/promises';
 
 // Load additional modules
 import Ajv2020 from 'ajv/dist/2020.js';
@@ -27,7 +27,7 @@ const main = async (): Promise<void> => {
 
 	schemaPaths.forEach( async schemaPath => {
 		// Load JSON file as a string
-		const schemaString = await fs.readFile(schemaPath, 'utf-8');
+		const schemaString = await readFile(schemaPath, 'utf-8');
 
 		// Parse the JSON string to an Object so the validator could handle it
 		const schemaObject = JSON.parse(schemaString);
