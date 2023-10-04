@@ -2919,7 +2919,7 @@ exports.checkBypass = checkBypass;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = void 0;
+exports.MissingRefError = exports.ValidationError = exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = void 0;
 const core_1 = __nccwpck_require__(2685);
 const draft7_1 = __nccwpck_require__(691);
 const discriminator_1 = __nccwpck_require__(4025);
@@ -2960,6 +2960,10 @@ Object.defineProperty(exports, "stringify", ({ enumerable: true, get: function (
 Object.defineProperty(exports, "nil", ({ enumerable: true, get: function () { return codegen_1.nil; } }));
 Object.defineProperty(exports, "Name", ({ enumerable: true, get: function () { return codegen_1.Name; } }));
 Object.defineProperty(exports, "CodeGen", ({ enumerable: true, get: function () { return codegen_1.CodeGen; } }));
+var validation_error_1 = __nccwpck_require__(7616);
+Object.defineProperty(exports, "ValidationError", ({ enumerable: true, get: function () { return validation_error_1.default; } }));
+var ref_error_1 = __nccwpck_require__(8190);
+Object.defineProperty(exports, "MissingRefError", ({ enumerable: true, get: function () { return ref_error_1.default; } }));
 //# sourceMappingURL=ajv.js.map
 
 /***/ }),
@@ -4118,7 +4122,6 @@ const names_1 = __nccwpck_require__(50);
 const resolve_1 = __nccwpck_require__(6646);
 const util_1 = __nccwpck_require__(3439);
 const validate_1 = __nccwpck_require__(8955);
-const URI = __nccwpck_require__(20);
 class SchemaEnv {
     constructor(env) {
         var _a;
@@ -4147,7 +4150,7 @@ function compileSchema(sch) {
     const _sch = getCompilingSchema.call(this, sch);
     if (_sch)
         return _sch;
-    const rootId = (0, resolve_1.getFullPath)(sch.root.baseId); // TODO if getFullPath removed 1 tests fails
+    const rootId = (0, resolve_1.getFullPath)(this.opts.uriResolver, sch.root.baseId); // TODO if getFullPath removed 1 tests fails
     const { es5, lines } = this.opts.code;
     const { ownProperties } = this.opts;
     const gen = new codegen_1.CodeGen(this.scope, { es5, lines, ownProperties });
@@ -4238,7 +4241,7 @@ function compileSchema(sch) {
 exports.compileSchema = compileSchema;
 function resolveRef(root, baseId, ref) {
     var _a;
-    ref = (0, resolve_1.resolveUrl)(baseId, ref);
+    ref = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, ref);
     const schOrFunc = root.refs[ref];
     if (schOrFunc)
         return schOrFunc;
@@ -4284,9 +4287,9 @@ ref // reference to resolve
 function resolveSchema(root, // root object with properties schema, refs TODO below SchemaEnv is assigned to it
 ref // reference to resolve
 ) {
-    const p = URI.parse(ref);
-    const refPath = (0, resolve_1._getFullPath)(p);
-    let baseId = (0, resolve_1.getFullPath)(root.baseId);
+    const p = this.opts.uriResolver.parse(ref);
+    const refPath = (0, resolve_1._getFullPath)(this.opts.uriResolver, p);
+    let baseId = (0, resolve_1.getFullPath)(this.opts.uriResolver, root.baseId, undefined);
     // TODO `Object.keys(root.schema).length > 0` should not be needed - but removing breaks 2 tests
     if (Object.keys(root.schema).length > 0 && refPath === baseId) {
         return getJsonPointer.call(this, p, root);
@@ -4308,7 +4311,7 @@ ref // reference to resolve
         const { schemaId } = this.opts;
         const schId = schema[schemaId];
         if (schId)
-            baseId = (0, resolve_1.resolveUrl)(baseId, schId);
+            baseId = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, schId);
         return new SchemaEnv({ schema, schemaId, root, baseId });
     }
     return getJsonPointer.call(this, p, schOrRef);
@@ -4335,12 +4338,12 @@ function getJsonPointer(parsedRef, { baseId, schema, root }) {
         // TODO PREVENT_SCOPE_CHANGE could be defined in keyword def?
         const schId = typeof schema === "object" && schema[this.opts.schemaId];
         if (!PREVENT_SCOPE_CHANGE.has(part) && schId) {
-            baseId = (0, resolve_1.resolveUrl)(baseId, schId);
+            baseId = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, schId);
         }
     }
     let env;
     if (typeof schema != "boolean" && schema.$ref && !(0, util_1.schemaHasRulesButRef)(schema, this.RULES)) {
-        const $ref = (0, resolve_1.resolveUrl)(baseId, schema.$ref);
+        const $ref = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, schema.$ref);
         env = resolveSchema.call(this, root, $ref);
     }
     // even though resolution failed we need to return SchemaEnv to throw exception
@@ -4396,10 +4399,10 @@ exports["default"] = names;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const resolve_1 = __nccwpck_require__(6646);
 class MissingRefError extends Error {
-    constructor(baseId, ref, msg) {
+    constructor(resolver, baseId, ref, msg) {
         super(msg || `can't resolve reference ${ref} from id ${baseId}`);
-        this.missingRef = (0, resolve_1.resolveUrl)(baseId, ref);
-        this.missingSchema = (0, resolve_1.normalizeId)((0, resolve_1.getFullPath)(this.missingRef));
+        this.missingRef = (0, resolve_1.resolveUrl)(resolver, baseId, ref);
+        this.missingSchema = (0, resolve_1.normalizeId)((0, resolve_1.getFullPath)(resolver, this.missingRef));
     }
 }
 exports["default"] = MissingRefError;
@@ -4416,7 +4419,6 @@ exports.getSchemaRefs = exports.resolveUrl = exports.normalizeId = exports._getF
 const util_1 = __nccwpck_require__(3439);
 const equal = __nccwpck_require__(8206);
 const traverse = __nccwpck_require__(2533);
-const URI = __nccwpck_require__(20);
 // TODO refactor to use keyword definitions
 const SIMPLE_INLINED = new Set([
     "type",
@@ -4481,15 +4483,16 @@ function countKeys(schema) {
     }
     return count;
 }
-function getFullPath(id = "", normalize) {
+function getFullPath(resolver, id = "", normalize) {
     if (normalize !== false)
         id = normalizeId(id);
-    const p = URI.parse(id);
-    return _getFullPath(p);
+    const p = resolver.parse(id);
+    return _getFullPath(resolver, p);
 }
 exports.getFullPath = getFullPath;
-function _getFullPath(p) {
-    return URI.serialize(p).split("#")[0] + "#";
+function _getFullPath(resolver, p) {
+    const serialized = resolver.serialize(p);
+    return serialized.split("#")[0] + "#";
 }
 exports._getFullPath = _getFullPath;
 const TRAILING_SLASH_HASH = /#\/?$/;
@@ -4497,19 +4500,19 @@ function normalizeId(id) {
     return id ? id.replace(TRAILING_SLASH_HASH, "") : "";
 }
 exports.normalizeId = normalizeId;
-function resolveUrl(baseId, id) {
+function resolveUrl(resolver, baseId, id) {
     id = normalizeId(id);
-    return URI.resolve(baseId, id);
+    return resolver.resolve(baseId, id);
 }
 exports.resolveUrl = resolveUrl;
 const ANCHOR = /^[a-z_][-a-z0-9._]*$/i;
 function getSchemaRefs(schema, baseId) {
     if (typeof schema == "boolean")
         return {};
-    const { schemaId } = this.opts;
+    const { schemaId, uriResolver } = this.opts;
     const schId = normalizeId(schema[schemaId] || baseId);
     const baseIds = { "": schId };
-    const pathPrefix = getFullPath(schId, false);
+    const pathPrefix = getFullPath(uriResolver, schId, false);
     const localRefs = {};
     const schemaRefs = new Set();
     traverse(schema, { allKeys: true }, (sch, jsonPtr, _, parentJsonPtr) => {
@@ -4523,7 +4526,9 @@ function getSchemaRefs(schema, baseId) {
         addAnchor.call(this, sch.$dynamicAnchor);
         baseIds[jsonPtr] = baseId;
         function addRef(ref) {
-            ref = normalizeId(baseId ? URI.resolve(baseId, ref) : ref);
+            // eslint-disable-next-line @typescript-eslint/unbound-method
+            const _resolve = this.opts.uriResolver.resolve;
+            ref = normalizeId(baseId ? _resolve(baseId, ref) : ref);
             if (schemaRefs.has(ref))
                 throw ambiguos(ref);
             schemaRefs.add(ref);
@@ -5259,7 +5264,7 @@ function checkNoDefault(it) {
 function updateContext(it) {
     const schId = it.schema[it.opts.schemaId];
     if (schId)
-        it.baseId = (0, resolve_1.resolveUrl)(it.baseId, schId);
+        it.baseId = (0, resolve_1.resolveUrl)(it.opts.uriResolver, it.baseId, schId);
 }
 function checkAsyncSchema(it) {
     if (it.schema.$async && !it.schemaEnv.$async)
@@ -5361,7 +5366,7 @@ function checkContextTypes(it, types) {
             strictTypesError(it, `type "${t}" not allowed by context "${it.dataTypes.join(",")}"`);
         }
     });
-    it.dataTypes = it.dataTypes.filter((t) => includesType(types, t));
+    narrowSchemaTypes(it, types);
 }
 function checkMultipleTypes(it, ts) {
     if (ts.length > 1 && !(ts.length === 2 && ts.includes("null"))) {
@@ -5385,6 +5390,16 @@ function hasApplicableType(schTs, kwdT) {
 }
 function includesType(ts, t) {
     return ts.includes(t) || (t === "integer" && ts.includes("number"));
+}
+function narrowSchemaTypes(it, withTypes) {
+    const ts = [];
+    for (const t of it.dataTypes) {
+        if (includesType(withTypes, t))
+            ts.push(t);
+        else if (withTypes.includes("integer") && t === "number")
+            ts.push("integer");
+    }
+    it.dataTypes = ts;
 }
 function strictTypesError(it, msg) {
     const schemaPath = it.schemaEnv.baseId + it.errSchemaPath;
@@ -5869,6 +5884,7 @@ const resolve_1 = __nccwpck_require__(6646);
 const dataType_1 = __nccwpck_require__(7725);
 const util_1 = __nccwpck_require__(3439);
 const $dataRefSchema = __nccwpck_require__(4775);
+const uri_1 = __nccwpck_require__(661);
 const defaultRegExp = (str, flags) => new RegExp(str, flags);
 defaultRegExp.code = "new RegExp";
 const META_IGNORE_OPTIONS = ["removeAdditional", "useDefaults", "coerceTypes"];
@@ -5912,29 +5928,31 @@ const deprecatedOptions = {
 const MAX_EXPRESSION = 200;
 // eslint-disable-next-line complexity
 function requiredOptions(o) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0;
     const s = o.strict;
     const _optz = (_a = o.code) === null || _a === void 0 ? void 0 : _a.optimize;
     const optimize = _optz === true || _optz === undefined ? 1 : _optz || 0;
     const regExp = (_c = (_b = o.code) === null || _b === void 0 ? void 0 : _b.regExp) !== null && _c !== void 0 ? _c : defaultRegExp;
+    const uriResolver = (_d = o.uriResolver) !== null && _d !== void 0 ? _d : uri_1.default;
     return {
-        strictSchema: (_e = (_d = o.strictSchema) !== null && _d !== void 0 ? _d : s) !== null && _e !== void 0 ? _e : true,
-        strictNumbers: (_g = (_f = o.strictNumbers) !== null && _f !== void 0 ? _f : s) !== null && _g !== void 0 ? _g : true,
-        strictTypes: (_j = (_h = o.strictTypes) !== null && _h !== void 0 ? _h : s) !== null && _j !== void 0 ? _j : "log",
-        strictTuples: (_l = (_k = o.strictTuples) !== null && _k !== void 0 ? _k : s) !== null && _l !== void 0 ? _l : "log",
-        strictRequired: (_o = (_m = o.strictRequired) !== null && _m !== void 0 ? _m : s) !== null && _o !== void 0 ? _o : false,
+        strictSchema: (_f = (_e = o.strictSchema) !== null && _e !== void 0 ? _e : s) !== null && _f !== void 0 ? _f : true,
+        strictNumbers: (_h = (_g = o.strictNumbers) !== null && _g !== void 0 ? _g : s) !== null && _h !== void 0 ? _h : true,
+        strictTypes: (_k = (_j = o.strictTypes) !== null && _j !== void 0 ? _j : s) !== null && _k !== void 0 ? _k : "log",
+        strictTuples: (_m = (_l = o.strictTuples) !== null && _l !== void 0 ? _l : s) !== null && _m !== void 0 ? _m : "log",
+        strictRequired: (_p = (_o = o.strictRequired) !== null && _o !== void 0 ? _o : s) !== null && _p !== void 0 ? _p : false,
         code: o.code ? { ...o.code, optimize, regExp } : { optimize, regExp },
-        loopRequired: (_p = o.loopRequired) !== null && _p !== void 0 ? _p : MAX_EXPRESSION,
-        loopEnum: (_q = o.loopEnum) !== null && _q !== void 0 ? _q : MAX_EXPRESSION,
-        meta: (_r = o.meta) !== null && _r !== void 0 ? _r : true,
-        messages: (_s = o.messages) !== null && _s !== void 0 ? _s : true,
-        inlineRefs: (_t = o.inlineRefs) !== null && _t !== void 0 ? _t : true,
-        schemaId: (_u = o.schemaId) !== null && _u !== void 0 ? _u : "$id",
-        addUsedSchema: (_v = o.addUsedSchema) !== null && _v !== void 0 ? _v : true,
-        validateSchema: (_w = o.validateSchema) !== null && _w !== void 0 ? _w : true,
-        validateFormats: (_x = o.validateFormats) !== null && _x !== void 0 ? _x : true,
-        unicodeRegExp: (_y = o.unicodeRegExp) !== null && _y !== void 0 ? _y : true,
-        int32range: (_z = o.int32range) !== null && _z !== void 0 ? _z : true,
+        loopRequired: (_q = o.loopRequired) !== null && _q !== void 0 ? _q : MAX_EXPRESSION,
+        loopEnum: (_r = o.loopEnum) !== null && _r !== void 0 ? _r : MAX_EXPRESSION,
+        meta: (_s = o.meta) !== null && _s !== void 0 ? _s : true,
+        messages: (_t = o.messages) !== null && _t !== void 0 ? _t : true,
+        inlineRefs: (_u = o.inlineRefs) !== null && _u !== void 0 ? _u : true,
+        schemaId: (_v = o.schemaId) !== null && _v !== void 0 ? _v : "$id",
+        addUsedSchema: (_w = o.addUsedSchema) !== null && _w !== void 0 ? _w : true,
+        validateSchema: (_x = o.validateSchema) !== null && _x !== void 0 ? _x : true,
+        validateFormats: (_y = o.validateFormats) !== null && _y !== void 0 ? _y : true,
+        unicodeRegExp: (_z = o.unicodeRegExp) !== null && _z !== void 0 ? _z : true,
+        int32range: (_0 = o.int32range) !== null && _0 !== void 0 ? _0 : true,
+        uriResolver: uriResolver,
     };
 }
 class Ajv {
@@ -6505,6 +6523,18 @@ function ucs2length(str) {
 exports["default"] = ucs2length;
 ucs2length.code = 'require("ajv/dist/runtime/ucs2length").default';
 //# sourceMappingURL=ucs2length.js.map
+
+/***/ }),
+
+/***/ 661:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const uri = __nccwpck_require__(20);
+uri.code = 'require("ajv/dist/runtime/uri").default';
+exports["default"] = uri;
+//# sourceMappingURL=uri.js.map
 
 /***/ }),
 
@@ -7665,7 +7695,7 @@ const def = {
             return callRootRef();
         const schOrEnv = compile_1.resolveRef.call(self, root, baseId, $ref);
         if (schOrEnv === undefined)
-            throw new ref_error_1.default(baseId, $ref);
+            throw new ref_error_1.default(it.opts.uriResolver, baseId, $ref);
         if (schOrEnv instanceof compile_1.SchemaEnv)
             return callValidate(schOrEnv);
         return inlineRefSchema(schOrEnv);
@@ -7832,7 +7862,7 @@ const def = {
             for (let i = 0; i < oneOf.length; i++) {
                 let sch = oneOf[i];
                 if ((sch === null || sch === void 0 ? void 0 : sch.$ref) && !(0, util_1.schemaHasRulesButRef)(sch, it.self.RULES)) {
-                    sch = compile_1.resolveRef.call(it.self, it.schemaEnv, it.baseId, sch === null || sch === void 0 ? void 0 : sch.$ref);
+                    sch = compile_1.resolveRef.call(it.self, it.schemaEnv.root, it.baseId, sch === null || sch === void 0 ? void 0 : sch.$ref);
                     if (sch instanceof compile_1.SchemaEnv)
                         sch = sch.schema;
                 }
@@ -8101,7 +8131,8 @@ const def = {
         if (!$data && schema.length === 0)
             throw new Error("enum must have non-empty array");
         const useLoop = schema.length >= it.opts.loopEnum;
-        const eql = (0, util_1.useFunc)(gen, equal_1.default);
+        let eql;
+        const getEql = () => (eql !== null && eql !== void 0 ? eql : (eql = (0, util_1.useFunc)(gen, equal_1.default)));
         let valid;
         if (useLoop || $data) {
             valid = gen.let("valid");
@@ -8117,12 +8148,12 @@ const def = {
         cxt.pass(valid);
         function loopEnum() {
             gen.assign(valid, false);
-            gen.forOf("v", schemaCode, (v) => gen.if((0, codegen_1._) `${eql}(${data}, ${v})`, () => gen.assign(valid, true).break()));
+            gen.forOf("v", schemaCode, (v) => gen.if((0, codegen_1._) `${getEql()}(${data}, ${v})`, () => gen.assign(valid, true).break()));
         }
         function equalCode(vSchema, i) {
             const sch = schema[i];
             return typeof sch === "object" && sch !== null
-                ? (0, codegen_1._) `${eql}(${data}, ${vSchema}[${i}])`
+                ? (0, codegen_1._) `${getEql()}(${data}, ${vSchema}[${i}])`
                 : (0, codegen_1._) `${data} === ${sch}`;
         }
     },
@@ -8276,7 +8307,7 @@ const codegen_1 = __nccwpck_require__(9179);
 const error = {
     message({ keyword, schemaCode }) {
         const comp = keyword === "maxProperties" ? "more" : "fewer";
-        return (0, codegen_1.str) `must NOT have ${comp} than ${schemaCode} items`;
+        return (0, codegen_1.str) `must NOT have ${comp} than ${schemaCode} properties`;
     },
     params: ({ schemaCode }) => (0, codegen_1._) `{limit: ${schemaCode}}`,
 };
@@ -12333,13 +12364,6 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs/prom
 
 /***/ }),
 
-/***/ 9411:
-/***/ ((module) => {
-
-module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:path");
-
-/***/ }),
-
 /***/ 2037:
 /***/ ((module) => {
 
@@ -12606,13 +12630,11 @@ const ansiStyles = assembleStyles();
 
 __nccwpck_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__) => {
 /* harmony import */ var node_fs_promises__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(3977);
-/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(9411);
-/* harmony import */ var ajv__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(2426);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(2186);
-/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_4__ = __nccwpck_require__(8090);
-/* harmony import */ var ansi_styles__WEBPACK_IMPORTED_MODULE_5__ = __nccwpck_require__(6844);
+/* harmony import */ var ajv__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(2426);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(2186);
+/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(8090);
+/* harmony import */ var ansi_styles__WEBPACK_IMPORTED_MODULE_4__ = __nccwpck_require__(6844);
 // Load node modules
-
 
 
 // Load additional modules
@@ -12622,65 +12644,64 @@ __nccwpck_require__.a(__webpack_module__, async (__webpack_handle_async_dependen
 
 
 // Load action inputs variables
-const schemaInput = _actions_core__WEBPACK_IMPORTED_MODULE_3__.getInput('schema');
-const patternInput = _actions_core__WEBPACK_IMPORTED_MODULE_3__.getInput('pattern');
+const patternInput = _actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput('pattern');
 
 // Load path to the checked out repository
 const repositoryPath = process.env.GITHUB_WORKSPACE;
 
-// Load the provided schema
-const schemaPath = node_path__WEBPACK_IMPORTED_MODULE_1__.join(repositoryPath, schemaInput);
-const schemaString = await node_fs_promises__WEBPACK_IMPORTED_MODULE_0__.readFile(schemaPath, 'utf-8');
-const schemaObject = JSON.parse(schemaString);
-
 // Get all jsons paths
-const globber = await _actions_glob__WEBPACK_IMPORTED_MODULE_4__.create(patternInput, {
+const globber = await _actions_glob__WEBPACK_IMPORTED_MODULE_3__.create(patternInput, {
 	followSymbolicLinks: false,
 	implicitDescendants: false,
 	matchDirectories: false,
 	omitBrokenSymbolicLinks: true
 });
 
-// Init Ajv schema validator
-const validator = new ajv__WEBPACK_IMPORTED_MODULE_2__({ allErrors: true });
-const validateFile = validator.compile(schemaObject);
-
 // Define errors counter so we can return correct exit code
 let errorsCounter = 0;
 
 // Validate each file according to schema
-for await (const jsonPath of globber.globGenerator()) {
+for await (const schemaPath of globber.globGenerator()) {
 	// Load JSON file as a string
-	const jsonString = await node_fs_promises__WEBPACK_IMPORTED_MODULE_0__.readFile(jsonPath, 'utf-8');
+	const schemaString = await node_fs_promises__WEBPACK_IMPORTED_MODULE_0__.readFile(schemaPath, 'utf-8');
 
 	// Parse the JSON string to an Object so the validator could handle it
-	const jsonObject = JSON.parse(jsonString);
+	const schemaObject = JSON.parse(schemaString);
+
+	// Init Ajv schema validator
+	const validator = new ajv__WEBPACK_IMPORTED_MODULE_1__({
+		$data: true, // Enable $data support for draft-07
+    	allErrors: true // Collect all validation errors
+	});
+	const validateSchema = validator.compile(schemaObject);
+
+	const schemaVersion = schemaObject["$schema"];
 
 	// Validate the file according to given schema
-	const validationResult = validateFile(jsonObject);
+	const validationResult = validateSchema({ "$ref": schemaVersion });
 
 	// Define relative JSON file path
-	const jsonPathRelative = jsonPath.replace(repositoryPath, '');
+	const schemaPathRelative = schemaPath.replace(repositoryPath, '');
 
 	// Print the validation results
 	if (validationResult) {
-		_actions_core__WEBPACK_IMPORTED_MODULE_3__.info(`${ansi_styles__WEBPACK_IMPORTED_MODULE_5__/* ["default"].green.open */ .Z.green.open}✔ file ${jsonPathRelative} is valid${ansi_styles__WEBPACK_IMPORTED_MODULE_5__/* ["default"].green.close */ .Z.green.close}`);
+		_actions_core__WEBPACK_IMPORTED_MODULE_2__.info(`${ansi_styles__WEBPACK_IMPORTED_MODULE_4__/* ["default"].green.open */ .Z.green.open}✔ file ${schemaPathRelative} is valid${ansi_styles__WEBPACK_IMPORTED_MODULE_4__/* ["default"].green.close */ .Z.green.close}`);
 	} else {
-		_actions_core__WEBPACK_IMPORTED_MODULE_3__.info(`${ansi_styles__WEBPACK_IMPORTED_MODULE_5__/* ["default"].red.open */ .Z.red.open}✖︎ file ${jsonPathRelative} is invalid${ansi_styles__WEBPACK_IMPORTED_MODULE_5__/* ["default"].red.close */ .Z.red.close}`);
+		_actions_core__WEBPACK_IMPORTED_MODULE_2__.info(`${ansi_styles__WEBPACK_IMPORTED_MODULE_4__/* ["default"].red.open */ .Z.red.open}✖︎ file ${schemaPathRelative} is invalid${ansi_styles__WEBPACK_IMPORTED_MODULE_4__/* ["default"].red.close */ .Z.red.close}`);
 		errorsCounter++;
 	}
 
 	// Print details from the validator
-	if (validateFile.errors) {
-		_actions_core__WEBPACK_IMPORTED_MODULE_3__.startGroup('Validation details');
-		_actions_core__WEBPACK_IMPORTED_MODULE_3__.info(JSON.stringify(validateFile.errors, null, 2));
-		_actions_core__WEBPACK_IMPORTED_MODULE_3__.endGroup();
+	if (validateSchema.errors) {
+		_actions_core__WEBPACK_IMPORTED_MODULE_2__.startGroup('Validation details');
+		_actions_core__WEBPACK_IMPORTED_MODULE_2__.info(JSON.stringify(validateSchema.errors, null, 2));
+		_actions_core__WEBPACK_IMPORTED_MODULE_2__.endGroup();
 	}
 }
 
 // Fail the task run in case of any error
 if (errorsCounter) {
-	_actions_core__WEBPACK_IMPORTED_MODULE_3__.setFailed(`There are ${errorsCounter} invalid files`);
+	_actions_core__WEBPACK_IMPORTED_MODULE_2__.setFailed(`There are ${errorsCounter} invalid files`);
 }
 
 __webpack_handle_async_dependencies__();

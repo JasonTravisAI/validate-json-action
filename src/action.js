@@ -25,9 +25,9 @@ const globber = await glob.create(patternInput, {
 let errorsCounter = 0;
 
 // Validate each file according to schema
-for await (const jsonPath of globber.globGenerator()) {
+for await (const schemaPath of globber.globGenerator()) {
 	// Load JSON file as a string
-	const schemaString = await fs.readFile(jsonPath, 'utf-8');
+	const schemaString = await fs.readFile(schemaPath, 'utf-8');
 
 	// Parse the JSON string to an Object so the validator could handle it
 	const schemaObject = JSON.parse(schemaString);
@@ -45,7 +45,7 @@ for await (const jsonPath of globber.globGenerator()) {
 	const validationResult = validateSchema({ "$ref": schemaVersion });
 
 	// Define relative JSON file path
-	const schemaPathRelative = jsonPath.replace(repositoryPath, '');
+	const schemaPathRelative = schemaPath.replace(repositoryPath, '');
 
 	// Print the validation results
 	if (validationResult) {
