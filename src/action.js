@@ -41,7 +41,13 @@ for await (const schemaPath of globber.globGenerator()) {
 	const schemaVersion = schemaObject["$schema"];
 
 	// Validate the file according to given schema
-	const validationResult = validateSchema({ "$ref": schemaVersion });
+	let validationResult
+
+	try {
+		validationResult = validateSchema({ "$ref": schemaVersion });
+	} catch (error) {
+		console.log(`Schema is invalid. Failed with error: ${error}`)
+	}
 
 	// Define relative JSON file path
 	const schemaPathRelative = schemaPath.replace(repositoryPath, '');
