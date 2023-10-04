@@ -4,10 +4,8 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'src/action.js'
-      - 'action.yml'
+      - 'src/action.ts'
       - 'package.json'
-      - 'package-lock.json'
 
 jobs:
   build:
