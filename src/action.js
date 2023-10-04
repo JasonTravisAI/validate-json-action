@@ -2,7 +2,7 @@
 import fs from 'node:fs/promises';
 
 // Load additional modules
-import Ajv2020 from 'ajv/dist/2020';
+import Ajv2020 from 'ajv';
 import core from '@actions/core';
 import glob from '@actions/glob';
 import styles from 'ansi-styles';
