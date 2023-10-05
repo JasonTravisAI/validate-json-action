@@ -17613,7 +17613,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 // Load node modules
-const promises_1 = __importDefault(__nccwpck_require__(3292));
+const promises_1 = __nccwpck_require__(3292);
 // Load additional modules
 const _2020_js_1 = __importDefault(__nccwpck_require__(6121));
 const core_1 = __importDefault(__nccwpck_require__(2186));
@@ -17632,7 +17632,7 @@ const main = async () => {
     const schemaPaths = await (0, fast_glob_1.default)(patternInput);
     schemaPaths.forEach(async (schemaPath) => {
         // Load JSON file as a string
-        const schemaString = await promises_1.default.readFile(schemaPath, 'utf-8');
+        const schemaString = await (0, promises_1.readFile)(schemaPath, 'utf-8');
         // Parse the JSON string to an Object so the validator could handle it
         const schemaObject = JSON.parse(schemaString);
         // Init Ajv schema validator
