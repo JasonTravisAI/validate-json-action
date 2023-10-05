@@ -1,15 +1,15 @@
 {
-  "compilerOptions": {
-    "declaration": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "outDir": "./build",
-    "strictNullChecks": true,
-    "strictPropertyInitialization": true,
-    "moduleResolution": "node",
-    "module": "commonjs",
-    "lib": ["ES2020"],
-    "target": "ES2019"
-  },
-  "include": ["src", "__tests__"]
+	"compilerOptions": {
+		"declaration": true,
+		"resolveJsonModule": true,
+		"esModuleInterop": true,
+		"outDir": "./build",
+		"strictNullChecks": true,
+		"strictPropertyInitialization": true,
+		"moduleResolution": "node",
+		"module": "commonjs",
+		"lib": ["ES2020"],
+		"target": "ES2019"
+	},
+	"include": ["src", "__tests__"]
 }

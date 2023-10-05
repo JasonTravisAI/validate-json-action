@@ -4,17 +4,15 @@ import * as core from '@actions/core';
 import fastglob from 'fast-glob';
 import styles from 'ansi-styles';
 
-
 const main = async (): Promise<void> => {
-
 	// Load action inputs variables
 	const patternInput = core.getInput('pattern');
 
 	// Load path to the checked out repository
 	const repositoryPath = process.env.GITHUB_WORKSPACE;
 
-	if (!repositoryPath){
-		throw Error('GITHUB_WORKSPACE path is not set')
+	if (!repositoryPath) {
+		throw Error('GITHUB_WORKSPACE path is not set');
 	}
 
 	// Define errors counter so we can return correct exit code
@@ -22,7 +20,7 @@ const main = async (): Promise<void> => {
 
 	const schemaPaths = await fastglob(patternInput);
 
-	schemaPaths.forEach( async schemaPath => {
+	schemaPaths.forEach(async (schemaPath) => {
 		// Load JSON file as a string
 		const schemaString = await readFile(schemaPath, 'utf-8');
 
@@ -34,12 +32,12 @@ const main = async (): Promise<void> => {
 			allErrors: true // Collect all validation errors
 		});
 
-		let validateSchema
+		let validateSchema;
 
 		try {
 			validateSchema = validator.compile(schemaObject);
 		} catch (error) {
-			core.error(`Schema validation failed for file ${schemaPath}, with error: ${error}`)
+			core.error(`Schema validation failed for file ${schemaPath}, with error: ${error}`);
 		}
 
 		// Define relative JSON file path
@@ -47,20 +45,21 @@ const main = async (): Promise<void> => {
 
 		// Print the validation results
 		if (validateSchema) {
-			core.info(`${styles.green.open}✔ file ${schemaPathRelative} is valid${styles.green.close}`);
+			core.info(
+				`${styles.green.open}✔ file ${schemaPathRelative} is valid${styles.green.close}`
+			);
 		} else {
-			core.info(`${styles.red.open}✖︎ file ${schemaPathRelative} is invalid${styles.red.close}`);
+			core.info(
+				`${styles.red.open}✖︎ file ${schemaPathRelative} is invalid${styles.red.close}`
+			);
 			errorsCounter += 1;
 		}
-	})
+	});
 
 	// Fail the task run in case of any error
 	if (errorsCounter) {
 		core.setFailed(`There are ${errorsCounter} invalid files`);
 	}
-
 };
 
 main();
-
-
