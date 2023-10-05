@@ -20,7 +20,7 @@ const main = async (): Promise<void> => {
 
 	const schemaPaths = await fastglob(patternInput);
 
-	await Promise.all(schemaPaths.map(async (schemaPath) => {
+	await Promise.all(schemaPaths.map(async schemaPath => {
 		// Load JSON file as a string
 		const schemaString = await readFile(schemaPath, 'utf-8');
 
