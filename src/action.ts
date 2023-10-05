@@ -1,9 +1,6 @@
-// Load node modules
 import { readFile } from 'fs/promises';
-
-// Load additional modules
 import Ajv2020 from 'ajv/dist/2020.js';
-import core from '@actions/core';
+import * as core from '@actions/core';
 import fastglob from 'fast-glob';
 import styles from 'ansi-styles';
 

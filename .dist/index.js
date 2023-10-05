@@ -17608,6 +17608,29 @@ exports["default"] = _default;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17616,12 +17639,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const promises_1 = __nccwpck_require__(3292);
 // Load additional modules
 const _2020_js_1 = __importDefault(__nccwpck_require__(6121));
-const core_1 = __importDefault(__nccwpck_require__(2186));
+const core = __importStar(__nccwpck_require__(2186));
 const fast_glob_1 = __importDefault(__nccwpck_require__(3664));
 const ansi_styles_1 = __importDefault(__nccwpck_require__(6844));
 const main = async () => {
     // Load action inputs variables
-    const patternInput = core_1.default.getInput('pattern');
+    const patternInput = core.getInput('pattern');
     // Load path to the checked out repository
     const repositoryPath = process.env.GITHUB_WORKSPACE;
     if (!repositoryPath) {
@@ -17644,22 +17667,22 @@ const main = async () => {
             validateSchema = validator.compile(schemaObject);
         }
         catch (error) {
-            core_1.default.error(`Schema validation failed for file ${schemaPath}, with error: ${error}`);
+            core.error(`Schema validation failed for file ${schemaPath}, with error: ${error}`);
         }
         // Define relative JSON file path
         const schemaPathRelative = schemaPath.replace(repositoryPath, '');
         // Print the validation results
         if (validateSchema) {
-            core_1.default.info(`${ansi_styles_1.default.green.open}✔ file ${schemaPathRelative} is valid${ansi_styles_1.default.green.close}`);
+            core.info(`${ansi_styles_1.default.green.open}✔ file ${schemaPathRelative} is valid${ansi_styles_1.default.green.close}`);
         }
         else {
-            core_1.default.info(`${ansi_styles_1.default.red.open}✖︎ file ${schemaPathRelative} is invalid${ansi_styles_1.default.red.close}`);
+            core.info(`${ansi_styles_1.default.red.open}✖︎ file ${schemaPathRelative} is invalid${ansi_styles_1.default.red.close}`);
             errorsCounter += 1;
         }
     });
     // Fail the task run in case of any error
     if (errorsCounter) {
-        core_1.default.setFailed(`There are ${errorsCounter} invalid files`);
+        core.setFailed(`There are ${errorsCounter} invalid files`);
     }
 };
 main();
