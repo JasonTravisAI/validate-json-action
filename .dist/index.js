@@ -17651,7 +17651,7 @@ const main = async () => {
     // Define errors counter so we can return correct exit code
     let errorsCounter = 0;
     const schemaPaths = await (0, fast_glob_1.default)(patternInput);
-    schemaPaths.forEach(async (schemaPath) => {
+    await Promise.all(schemaPaths.map(async (schemaPath) => {
         // Load JSON file as a string
         const schemaString = await (0, promises_1.readFile)(schemaPath, 'utf-8');
         // Parse the JSON string to an Object so the validator could handle it
@@ -17677,10 +17677,9 @@ const main = async () => {
             core.info(`${ansi_styles_1.default.red.open}✖︎ file ${schemaPathRelative} is invalid${ansi_styles_1.default.red.close}`);
             errorsCounter += 1;
         }
-    });
+    }));
     // Fail the task run in case of any error
     if (errorsCounter) {
-        core.info("IM HERE");
         core.setFailed(`There are ${errorsCounter} invalid files`);
     }
 };
