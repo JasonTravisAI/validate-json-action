@@ -17635,9 +17635,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-// Load node modules
 const promises_1 = __nccwpck_require__(3292);
-// Load additional modules
 const _2020_js_1 = __importDefault(__nccwpck_require__(6121));
 const core = __importStar(__nccwpck_require__(2186));
 const fast_glob_1 = __importDefault(__nccwpck_require__(3664));
