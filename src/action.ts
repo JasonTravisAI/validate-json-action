@@ -20,7 +20,7 @@ const main = async (): Promise<void> => {
 
 	const schemaPaths = await fastglob(patternInput);
 
-	schemaPaths.forEach(async (schemaPath) => {
+	await Promise.all(schemaPaths.map(async (schemaPath) => {
 		// Load JSON file as a string
 		const schemaString = await readFile(schemaPath, 'utf-8');
 
@@ -54,11 +54,10 @@ const main = async (): Promise<void> => {
 			);
 			errorsCounter += 1;
 		}
-	});
+	}));
 
 	// Fail the task run in case of any error
 	if (errorsCounter) {
-		core.info("IM HERE")
 		core.setFailed(`There are ${errorsCounter} invalid files`);
 	}
 };
