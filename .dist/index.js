@@ -17680,6 +17680,7 @@ const main = async () => {
     });
     // Fail the task run in case of any error
     if (errorsCounter) {
+        core.info("IM HERE");
         core.setFailed(`There are ${errorsCounter} invalid files`);
     }
 };
